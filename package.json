@@ -1,0 +1,30 @@
+{
+  "name": "icbc-collectible-traceability",
+  "version": "1.0.0",
+  "description": "「工银溯藏」—— 基于区块链的藏品数字身份溯源系统",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev:api": "cd api && npm run start",
+    "dev:blockchain": "cd blockchain && npm run start"
+  },
+  "keywords": [
+    "blockchain",
+    "traceability",
+    "collectibles",
+    "hyperledger",
+    "digital-identity"
+  ],
+  "author": "ICBC Blockchain Team",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "fabric-ca-client": "^2.2.20",
+    "fabric-network": "^2.2.20",
+    "mysql2": "^3.15.1",
+    "promise": "^8.3.0"
+  }
+}

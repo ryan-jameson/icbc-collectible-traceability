@@ -1,0 +1,50 @@
+# 工银溯藏联盟链网络配置
+
+version: '1.0'
+
+networks:
+  icbc-collectible-network:
+    name: icbc-collectible-network
+    description: 工商银行藏品溯源联盟链网络
+    version: 1.0.0
+
+organizations:
+  - name: ICBC
+    id: ICBCMSP
+    mspPath: crypto-config/peerOrganizations/icbc.com/msp
+    adminPrivateKeyPath: crypto-config/peerOrganizations/icbc.com/users/Admin@icbc.com/msp/keystore
+    peerCount: 2
+    ordererCount: 1
+    caCount: 1
+  - name: BrandA
+    id: BrandAMSP
+    mspPath: crypto-config/peerOrganizations/branda.com/msp
+    adminPrivateKeyPath: crypto-config/peerOrganizations/branda.com/users/Admin@branda.com/msp/keystore
+    peerCount: 1
+    caCount: 1
+  - name: BrandB
+    id: BrandBMSP
+    mspPath: crypto-config/peerOrganizations/brandb.com/msp
+    adminPrivateKeyPath: crypto-config/peerOrganizations/brandb.com/users/Admin@brandb.com/msp/keystore
+    peerCount: 1
+    caCount: 1
+
+channels:
+  - name: collectible-channel
+    description: 藏品溯源主通道
+    orderer: orderer.icbc.com:7050
+    organizations:
+      - ICBC
+      - BrandA
+      - BrandB
+    policies:
+      Readers: "OR('ICBCMSP.member', 'BrandAMSP.member', 'BrandBMSP.member')"
+      Writers: "OR('ICBCMSP.member', 'BrandAMSP.member', 'BrandBMSP.member')"
+      Admins: "OR('ICBCMSP.admin', 'BrandAMSP.admin', 'BrandBMSP.admin')"
+
+applications:
+  - name: collectible-app
+    version: 1.0.0
+    channel: collectible-channel
+    chaincode: collectible-chaincode
+    organizations: [ICBC, BrandA, BrandB]

@@ -1,0 +1,20 @@
+{
+  "name": "collectible-chaincode",
+  "version": "1.0.0",
+  "description": "Collectible traceability smart contract for Hyperledger Fabric",
+  "main": "collectible-chaincode.js",
+  "license": "Apache-2.0",
+  "scripts": {
+    "start": "fabric-chaincode-node start",
+    "postinstall": "node scripts/postinstall.js"
+  },
+  "engines": {
+    "node": ">=12.13.0",
+    "npm": ">=6.13.0"
+  },
+  "dependencies": {
+    "fabric-contract-api": "2.2.0",
+    "fabric-shim": "2.2.0",
+    "@so-ric/colorspace": "file:vendor/@so-ric/colorspace"
+  }
+}

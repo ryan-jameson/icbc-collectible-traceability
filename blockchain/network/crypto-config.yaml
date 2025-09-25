@@ -1,0 +1,32 @@
+# 区块链网络加密材料配置
+
+OrdererOrgs:
+  - Name: ICBC
+    Domain: icbc.com
+    Specs:
+      - Hostname: orderer
+
+PeerOrgs:
+  - Name: ICBC
+    Domain: icbc.com
+    EnableNodeOUs: true
+    Template:
+      Count: 2
+    Users:
+      Count: 1
+
+  - Name: BrandA
+    Domain: branda.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+  - Name: BrandB
+    Domain: brandb.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1

@@ -1,0 +1,146 @@
+{
+  "application": {
+    "name": "CollectibleTraceability",
+    "version": "1.0.0",
+    "description": "藏品溯源区块链应用",
+    "environment": "development",
+    "port": 3000,
+    "host": "localhost"
+  },
+  "blockchain": {
+    "networkName": "icbc-collectible-network",
+    "channelName": "collectible-channel",
+    "chaincodeName": "collectible-chaincode",
+    "chaincodeVersion": "1.0",
+    "timeout": 30000,
+    "maxRetries": 3,
+    "retryDelay": 1000
+  },
+  "database": {
+    "type": "mysql",
+    "host": "localhost",
+    "user": "root",
+    "password": "password",
+    "database": "collectible",
+    "port": 3306,
+    "dialect": "mysql",
+    "pool": {
+      "max": 10,
+      "min": 0,
+      "acquire": 30000,
+      "idle": 10000
+    },
+    "timezone": "Asia/Shanghai"
+  },
+  "authentication": {
+    "jwtSecret": "collectible-traceability-secret-key",
+    "tokenExpiry": "24h",
+    "algorithm": "HS256"
+  },
+  "logging": {
+    "level": "info",
+    "format": "json",
+    "file": {
+      "enabled": true,
+      "path": "./logs/application.log",
+      "maxSize": "20m",
+      "maxFiles": "14d"
+    },
+    "console": {
+      "enabled": true
+    }
+  },
+  "api": {
+    "prefix": "/api",
+    "version": "v1",
+    "rateLimit": {
+      "enabled": true,
+      "max": 100
+    },
+    "cors": {
+      "enabled": true,
+      "origin": ["*"],
+      "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      "allowedHeaders": ["Content-Type", "Authorization"]
+    }
+  },
+  "fabric": {
+    "wallet": {
+      "path": "./wallet",
+      "defaultIdentity": "Admin@icbc.com"
+    },
+    "gateway": {
+      "discovery": {
+        "enabled": true,
+        "asLocalhost": true
+      }
+    },
+    "msp": {
+      "path": "./crypto-config/peerOrganizations/icbc.com/users/Admin@icbc.com/msp",
+      "id": "ICBCMSP"
+    }
+  },
+  "fileStorage": {
+    "type": "local",
+    "path": "./uploads",
+    "maxSize": 5242880,
+    "allowedTypes": ["image/jpeg", "image/png", "application/pdf"]
+  },
+  "qrCode": {
+    "enabled": true,
+    "size": 256,
+    "margin": 1,
+    "color": {
+      "dark": "#000000",
+      "light": "#ffffff"
+    },
+    "format": "png"
+  },
+  "performance": {
+    "batchSize": 10,
+    "concurrency": 5,
+    "cache": {
+      "enabled": false,
+      "ttl": 300
+    }
+  },
+  "security": {
+    "enableTLS": true,
+    "certPath": "./config/certs",
+    "privateKeyPath": "./config/certs",
+    "corsProtection": true,
+    "xssProtection": true,
+    "csrfProtection": true
+  },
+  "notifications": {
+    "email": {
+      "enabled": false,
+      "host": "smtp.example.com",
+      "port": 587,
+      "secure": false,
+      "auth": {
+        "user": "your-email@example.com",
+        "pass": "your-email-password"
+      }
+    },
+    "webhook": {
+      "enabled": false,
+      "url": "https://your-webhook-url.com",
+      "events": ["collectible_created", "ownership_transferred", "authenticity_verified"]
+    }
+  },
+  "testing": {
+    "enabled": false,
+    "mockData": false
+  },
+  "features": {
+    "analytics": {
+      "enabled": true,
+      "trackingId": "UA-XXXXXXXXX-X"
+    },
+    "dashboard": {
+      "enabled": true,
+      "refreshInterval": 60
+    }
+  }
+}

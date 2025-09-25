@@ -1,0 +1,190 @@
+# 区块链网络配置交易生成器配置
+
+Organizations:
+  - &OrdererOrg
+    Name: OrdererMSP
+    ID: OrdererMSP
+    MSPDir: crypto-config/ordererOrganizations/icbc.com/msp
+    AdminPrincipal: Role.ADMIN
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererMSP.admin')"
+
+  - &ICBC
+    Name: ICBCMSP
+    ID: ICBCMSP
+    MSPDir: crypto-config/peerOrganizations/icbc.com/msp
+    AdminPrincipal: Role.ADMIN
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('ICBCMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('ICBCMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('ICBCMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('ICBCMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.icbc.com
+        Port: 7051
+
+  - &BrandA
+    Name: BrandAMSP
+    ID: BrandAMSP
+    MSPDir: crypto-config/peerOrganizations/branda.com/msp
+    AdminPrincipal: Role.ADMIN
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('BrandAMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('BrandAMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('BrandAMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('BrandAMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.branda.com
+        Port: 8051
+
+  - &BrandB
+    Name: BrandBMSP
+    ID: BrandBMSP
+    MSPDir: crypto-config/peerOrganizations/brandb.com/msp
+    AdminPrincipal: Role.ADMIN
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('BrandBMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('BrandBMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('BrandBMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('BrandBMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.brandb.com
+        Port: 9051
+
+Orderer: &OrdererDefaults
+  OrdererType: solo
+  Addresses:
+    - orderer.icbc.com:7050
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 99 MB
+    PreferredMaxBytes: 512 KB
+  Kafka:
+    Brokers:
+      - 127.0.0.1:9092
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+  Capabilities:
+    V2_0: true
+
+Application: &ApplicationDefaults
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+    Endorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+  Capabilities:
+    V2_0: true
+
+Capabilities:
+  Global: &GlobalCapabilities
+    V2_0: true
+  Orderer: &OrdererCapabilities
+    V2_0: true
+  Application: &ApplicationCapabilities
+    V2_0: true
+
+Profiles:
+  OneOrgOrdererGenesis:
+    Policies:
+      Readers:
+        Type: ImplicitMeta
+        Rule: "ANY Readers"
+      Writers:
+        Type: ImplicitMeta
+        Rule: "ANY Writers"
+      Admins:
+        Type: ImplicitMeta
+        Rule: "MAJORITY Admins"
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+        - *OrdererOrg
+      Capabilities: 
+        <<: *OrdererCapabilities
+    Consortiums:
+      SampleConsortium:
+        Organizations:
+          - *ICBC
+          - *BrandA
+          - *BrandB
+    Capabilities: 
+      <<: *GlobalCapabilities
+
+  OneOrgChannel:
+    Consortium: SampleConsortium
+    Policies:
+      Readers:
+        Type: ImplicitMeta
+        Rule: "ANY Readers"
+      Writers:
+        Type: ImplicitMeta
+        Rule: "ANY Writers"
+      Admins:
+        Type: ImplicitMeta
+        Rule: "MAJORITY Admins"
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *ICBC
+        - *BrandA
+        - *BrandB
+      Capabilities: 
+        <<: *ApplicationCapabilities
