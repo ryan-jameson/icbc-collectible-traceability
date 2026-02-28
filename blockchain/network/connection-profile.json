@@ -17,24 +17,9 @@
         "orderer.icbc.com"
       ],
       "peers": {
-        "peer0.icbc.com": {
-          "endorsingPeer": true,
-          "chaincodeQuery": true,
-          "ledgerQuery": true,
-          "eventSource": true
-        },
-        "peer0.branda.com": {
-          "endorsingPeer": true,
-          "chaincodeQuery": true,
-          "ledgerQuery": true,
-          "eventSource": true
-        },
-        "peer0.brandb.com": {
-          "endorsingPeer": true,
-          "chaincodeQuery": true,
-          "ledgerQuery": true,
-          "eventSource": true
-        }
+        "peer0.icbc.com": {},
+        "peer0.branda.com": {},
+        "peer0.brandb.com": {}
       }
     }
   },
@@ -42,28 +27,12 @@
     "ICBC": {
       "mspid": "ICBCMSP",
       "peers": [
-        "peer0.icbc.com"
-      ],
-      "certificateAuthorities": [
-        "ca.icbc.com"
-      ]
-    },
-    "BrandA": {
-      "mspid": "BrandAMSP",
-      "peers": [
-        "peer0.branda.com"
-      ],
-      "certificateAuthorities": [
-        "ca.branda.com"
-      ]
-    },
-    "BrandB": {
-      "mspid": "BrandBMSP",
-      "peers": [
+        "peer0.icbc.com",
+        "peer0.branda.com",
         "peer0.brandb.com"
       ],
       "certificateAuthorities": [
-        "ca.brandb.com"
+        "ca.icbc.com"
       ]
     }
   },
@@ -117,26 +86,6 @@
       "caName": "ca.icbc.com",
       "tlsCACerts": {
         "path": "/mnt/e/libao/区块链1/blockchain/network/crypto-config/peerOrganizations/icbc.com/ca/ca.icbc.com-cert.pem"
-      },
-      "httpOptions": {
-        "verify": false
-      }
-    },
-    "ca.branda.com": {
-      "url": "https://localhost:8054",
-      "caName": "ca.branda.com",
-      "tlsCACerts": {
-        "path": "/mnt/e/libao/区块链1/blockchain/network/crypto-config/peerOrganizations/branda.com/ca/ca.branda.com-cert.pem"
-      },
-      "httpOptions": {
-        "verify": false
-      }
-    },
-    "ca.brandb.com": {
-      "url": "https://localhost:9054",
-      "caName": "ca.brandb.com",
-      "tlsCACerts": {
-        "path": "/mnt/e/libao/区块链1/blockchain/network/crypto-config/peerOrganizations/brandb.com/ca/ca.brandb.com-cert.pem"
       },
       "httpOptions": {
         "verify": false

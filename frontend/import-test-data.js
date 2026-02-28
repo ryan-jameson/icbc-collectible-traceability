@@ -4,7 +4,7 @@
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../../blockchain/config/.env') });
+require('dotenv').config({ path: path.resolve(__dirname, '../blockchain/config/.env') });
 
 // 数据库连接配置
 const dbConfig = {
@@ -27,7 +27,8 @@ const testData = {
             icbc_user_id: 'ICBCUSER00000001',
             password: 'admin123',
             role: 'SUPER_ADMIN',
-            status: 'ACTIVE'
+            status: 'ACTIVE',
+            account_type: 'ENTERPRISE'
         },
         {
             name: '工行管理员',
@@ -37,7 +38,8 @@ const testData = {
             icbc_user_id: 'ICBCUSER00000002',
             password: 'admin123',
             role: 'ICBC_ADMIN',
-            status: 'ACTIVE'
+            status: 'ACTIVE',
+            account_type: 'ENTERPRISE'
         },
         {
             name: '品牌管理员',
@@ -47,17 +49,30 @@ const testData = {
             icbc_user_id: 'ICBCUSER00000003',
             password: 'admin123',
             role: 'BRAND_ADMIN',
-            status: 'ACTIVE'
+            status: 'ACTIVE',
+            account_type: 'ENTERPRISE'
         },
         {
-            name: '普通用户',
+            name: '个人测试用户',
             email: 'user@example.com',
             phone: '13800000004',
             icbc_account_id: 'ICBC00000004',
             icbc_user_id: 'ICBCUSER00000004',
             password: 'user123',
             role: 'USER',
-            status: 'ACTIVE'
+            status: 'ACTIVE',
+            account_type: 'PERSONAL'
+        },
+        {
+            name: '企业测试用户',
+            email: 'enterprise@example.com',
+            phone: '13800000005',
+            icbc_account_id: 'ICBC00000005',
+            icbc_user_id: 'ICBCUSER00000005',
+            password: 'user123',
+            role: 'USER',
+            status: 'ACTIVE',
+            account_type: 'ENTERPRISE'
         }
     ],
     
@@ -171,8 +186,8 @@ async function importUsers(connection) {
             const hashedPassword = await bcrypt.hash(userData.password, salt);
             
             const [result] = await connection.execute(
-                `INSERT INTO users (name, email, phone, icbc_account_id, icbc_user_id, password, salt, role, status, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+                `INSERT INTO users (name, email, phone, icbc_account_id, icbc_user_id, password, salt, role, status, account_type, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
                 [
                     userData.name,
                     userData.email,
@@ -182,7 +197,8 @@ async function importUsers(connection) {
                     hashedPassword,
                     salt,
                     userData.role,
-                    userData.status
+                    userData.status,
+                    userData.account_type || 'PERSONAL'
                 ]
             );
             
@@ -211,8 +227,8 @@ async function importBrands(connection, users) {
         const savedBrands = [];
         for (const brandData of testData.brands) {
             const [result] = await connection.execute(
-                `INSERT INTO brands (name, logo, description, website, contact_email, contact_phone, blockchain_msp_id, partnership_level, partnership_start_date, product_categories, status, created_by, approved_by, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+                `INSERT INTO brands (name, logo, description, website, contact_email, contact_phone, blockchain_msp_id, partnership_level, partnership_start_date, status, created_by, approved_by, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
                 [
                     brandData.name,
                     brandData.logo,
@@ -223,7 +239,6 @@ async function importBrands(connection, users) {
                     brandData.blockchain_msp_id,
                     brandData.partnership_level,
                     brandData.partnership_start_date,
-                    JSON.stringify(brandData.product_categories),
                     brandData.status,
                     adminUser.id,
                     adminUser.id
@@ -299,7 +314,7 @@ async function importCollectibles(connection, users, brands) {
                 
                 // 插入流转历史
                 await connection.execute(
-                    `INSERT INTO transfer_histories (collectible_id, from_user, to_user, type, transaction_id, created_at)
+                    `INSERT INTO transfer_histories (collectible_id, from_user, to_user, type, transaction_id, timestamp)
                      VALUES (?, ?, ?, ?, ?, NOW())`,
                     [
                         collectibleId,
@@ -313,8 +328,8 @@ async function importCollectibles(connection, users, brands) {
                 // 如果有所有者，更新用户藏品关联
                 if (hasOwner) {
                     await connection.execute(
-                        `INSERT INTO user_collectibles (user_id, collectible_id, created_at)
-                         VALUES (?, ?, NOW())`,
+                        `INSERT INTO user_collectibles (user_id, collectible_id)
+                         VALUES (?, ?)`,
                         [user.id, collectibleId]
                     );
                 }

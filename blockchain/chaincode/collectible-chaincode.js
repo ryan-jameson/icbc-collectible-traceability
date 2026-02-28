@@ -16,6 +16,8 @@ class CollectibleTraceabilityContract extends Contract {
             throw new Error(`藏品 ${collectibleId} 已存在`);
         }
 
+    const timestamp = this.getTransactionTimestamp(ctx);
+
         // 创建藏品数据
         const collectible = {
             id: collectibleId,
@@ -28,7 +30,7 @@ class CollectibleTraceabilityContract extends Contract {
             description: description,
             currentOwner: brand, // 初始所有者为品牌方
             createdBy: ctx.clientIdentity.getID(),
-            createdAt: new Date().toISOString(),
+            createdAt: timestamp,
             status: 'ACTIVE',
             transferHistory: []
         };
@@ -62,7 +64,7 @@ class CollectibleTraceabilityContract extends Contract {
         collectible.transferHistory.push({
             from: collectible.currentOwner,
             to: userId,
-            timestamp: new Date().toISOString(),
+            timestamp: this.getTransactionTimestamp(ctx),
             type: 'CLAIM'
         });
 
@@ -96,7 +98,7 @@ class CollectibleTraceabilityContract extends Contract {
         collectible.transferHistory.push({
             from: currentOwner,
             to: newOwnerId,
-            timestamp: new Date().toISOString(),
+            timestamp: this.getTransactionTimestamp(ctx),
             type: 'TRANSFER'
         });
 
@@ -152,6 +154,29 @@ class CollectibleTraceabilityContract extends Contract {
     isAdmin(userId) {
         // 实际实现中应该使用区块链的MSP身份验证
         return userId.includes('admin') || userId.includes('ICBC');
+    }
+
+    getTransactionTimestamp(ctx) {
+        const txTime = ctx.stub.getTxTimestamp();
+        if (!txTime) {
+            return new Date().toISOString();
+        }
+
+        let seconds = 0;
+        if (txTime.seconds) {
+            if (typeof txTime.seconds.toNumber === 'function') {
+                seconds = txTime.seconds.toNumber();
+            } else if (typeof txTime.seconds === 'number') {
+                seconds = txTime.seconds;
+            } else if (typeof txTime.seconds === 'object' && txTime.seconds !== null && typeof txTime.seconds.low === 'number') {
+                seconds = txTime.seconds.low;
+            }
+        }
+
+        const nanos = (txTime && typeof txTime.nanos === 'number') ? txTime.nanos : 0;
+
+        const millis = seconds * 1000 + Math.floor(nanos / 1e6);
+        return new Date(millis).toISOString();
     }
 }
 

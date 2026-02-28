@@ -86,6 +86,19 @@ exports.closeDB = async () => {
 const initializeTables = async () => {
     try {
         const pool = exports.getPool();
+        const databaseName = config.mysql.database;
+
+        const ensureColumnExists = async (table, column, definition) => {
+            const [rows] = await pool.execute(
+                `SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
+                [databaseName, table, column]
+            );
+            if (rows.length === 0) {
+                logger.info(`表 ${table} 缺少字段 ${column}，正在补齐...`);
+                await pool.execute(`ALTER TABLE \`${table}\` ADD COLUMN ${column} ${definition}`);
+                logger.info(`字段 ${column} 已成功添加到表 ${table}`);
+            }
+        };
         
         // 创建users表
         await pool.execute(`
@@ -99,12 +112,14 @@ const initializeTables = async () => {
                 password VARCHAR(255) NOT NULL,
                 salt VARCHAR(255),
                 role ENUM('USER', 'BRAND_ADMIN', 'ICBC_ADMIN', 'SUPER_ADMIN') NOT NULL DEFAULT 'USER',
+                account_type ENUM('ENTERPRISE', 'PERSONAL') NOT NULL DEFAULT 'PERSONAL',
                 status ENUM('ACTIVE', 'INACTIVE', 'SUSPENDED', 'BLOCKED') NOT NULL DEFAULT 'ACTIVE',
                 last_login DATETIME,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             )
         `);
+        await ensureColumnExists('users', 'account_type', "ENUM('ENTERPRISE', 'PERSONAL') NOT NULL DEFAULT 'PERSONAL'");
         
         // 创建brands表
         await pool.execute(`
@@ -146,9 +161,11 @@ const initializeTables = async () => {
                 qr_code_url VARCHAR(255),
                 nfc_id VARCHAR(50) UNIQUE,
                 current_owner_id INT,
-                status ENUM('ACTIVE', 'INACTIVE', 'LOAN', 'INSURED') NOT NULL DEFAULT 'ACTIVE',
+                    status ENUM('PENDING_REVIEW', 'ACTIVE', 'INACTIVE', 'LOAN', 'INSURED', 'REJECTED', 'TRANSFER_PENDING') NOT NULL DEFAULT 'ACTIVE',
                 estimated_value DECIMAL(10, 2) DEFAULT 0,
                 last_valuation_date DATE,
+                    product_photo LONGBLOB,
+                metadata JSON,
                 created_by INT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -157,6 +174,13 @@ const initializeTables = async () => {
                 FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
             )
         `);
+            await ensureColumnExists('collectibles', 'product_photo', 'LONGBLOB');
+            await pool.execute(`
+                ALTER TABLE collectibles
+                MODIFY COLUMN status ENUM('PENDING_REVIEW', 'ACTIVE', 'INACTIVE', 'LOAN', 'INSURED', 'REJECTED', 'TRANSFER_PENDING') NOT NULL DEFAULT 'ACTIVE'
+            `);
+        await ensureColumnExists('collectibles', 'metadata', 'JSON');
+            await ensureColumnExists('collectibles', 'transfer_request', 'JSON');
         
         // 创建transfer_histories表
         await pool.execute(`
@@ -168,9 +192,11 @@ const initializeTables = async () => {
                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 type ENUM('CLAIM', 'TRANSFER', 'INSURANCE', 'LOAN') NOT NULL DEFAULT 'TRANSFER',
                 transaction_id VARCHAR(100),
+                metadata JSON,
                 FOREIGN KEY (collectible_id) REFERENCES collectibles(id) ON DELETE CASCADE
             )
         `);
+        await ensureColumnExists('transfer_histories', 'metadata', 'JSON');
         
         // 创建user_collectibles关联表
         await pool.execute(`

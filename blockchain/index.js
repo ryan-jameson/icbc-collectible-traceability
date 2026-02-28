@@ -17,6 +17,79 @@ let gateway = null;
 let network = null;
 let contract = null;
 
+const parseChaincodeResult = (resultBuffer) => {
+    if (!resultBuffer || resultBuffer.length === 0) {
+        return {};
+    }
+
+    const resultString = resultBuffer.toString();
+    if (!resultString) {
+        return {};
+    }
+
+    try {
+        return JSON.parse(resultString);
+    } catch (parseError) {
+        logger.warn('解析链码返回值失败，返回原始字符串', { resultString, error: parseError.message });
+        return { rawResult: resultString };
+    }
+};
+
+function resolveTlsPath(originalPath) {
+    if (!originalPath) {
+        return originalPath;
+    }
+
+    if (fs.existsSync(originalPath)) {
+        return originalPath;
+    }
+
+    const normalized = originalPath.replace(/\\/g, '/');
+    const candidates = [];
+
+    const anchor = '/blockchain/';
+    const anchorIndex = normalized.indexOf(anchor);
+    if (anchorIndex !== -1) {
+        const relativePart = normalized.substring(anchorIndex + anchor.length);
+        candidates.push(path.resolve(__dirname, relativePart));
+    }
+
+    candidates.push(path.resolve(__dirname, normalized));
+    if (!path.isAbsolute(normalized)) {
+        candidates.push(path.resolve(process.cwd(), normalized));
+    }
+
+    for (const candidate of candidates) {
+        if (fs.existsSync(candidate)) {
+            logger.debug(`修正 TLS 证书路径: ${originalPath} -> ${candidate}`);
+            return candidate;
+        }
+    }
+
+    logger.warn(`无法找到 TLS 证书文件: ${originalPath}`);
+    return originalPath;
+}
+
+function normalizeTlsCertPaths(connectionProfile) {
+    if (!connectionProfile) {
+        return;
+    }
+
+    const sections = ['orderers', 'peers', 'certificateAuthorities'];
+    sections.forEach((section) => {
+        const entries = connectionProfile[section];
+        if (!entries) {
+            return;
+        }
+
+        Object.values(entries).forEach((entry) => {
+            if (entry?.tlsCACerts?.path) {
+                entry.tlsCACerts.path = resolveTlsPath(entry.tlsCACerts.path);
+            }
+        });
+    });
+}
+
 // 初始化区块链网络连接
 exports.initialize = async () => {
     const startTime = Date.now();
@@ -27,6 +100,7 @@ exports.initialize = async () => {
         // 读取连接配置
         logger.debug('读取区块链连接配置...');
         const connectionProfile = await CryptoUtils.safeParseJSON(fs.readFileSync(connectionProfilePath, 'utf8'));
+        normalizeTlsCertPaths(connectionProfile);
         const wallet = await Wallets.newFileSystemWallet(walletPath);
 
         // 设置连接选项
@@ -48,6 +122,13 @@ exports.initialize = async () => {
 
         // 获取智能合约
         contract = network.getContract('collectible-chaincode');
+        try {
+            contract.addDiscoveryInterest({ name: 'collectible-chaincode' });
+        } catch (discoveryError) {
+            logger.warn('添加智能合约发现兴趣失败，将使用默认发现配置', {
+                error: discoveryError.message
+            });
+        }
 
         const connectionTime = Date.now() - startTime;
         logger.logNetworkConnection('icbc-collectible-network', 'admin', 'success', connectionTime);
@@ -85,18 +166,49 @@ exports.invoke = async (functionName, ...args) => {
         }
 
         // 生成交易ID
-        const txId = gateway.getClient().newTransactionID();
-        const txIdStr = txId.getTransactionID();
-        
-        logger.logTransaction(txIdStr, functionName, args, 'started');
-        
-        // 调用智能合约方法
-        const result = await contract.submitTransaction(functionName, ...args);
-        
-        const executionTime = Date.now() - startTime;
-        logger.logTransaction(txIdStr, functionName, args, 'success', executionTime);
-        
-        return JSON.parse(result.toString());
+        const transaction = contract.createTransaction(functionName);
+    const txIdStr = transaction.getTransactionId();
+
+        try {
+            const channel = network ? network.getChannel() : null;
+            if (channel) {
+                const endorsers = [
+                    ...(channel.getEndorsers('ICBCMSP') || []),
+                    ...(channel.getEndorsers('BrandAMSP') || []),
+                    ...(channel.getEndorsers('BrandBMSP') || [])
+                ].filter(Boolean);
+
+                if (endorsers.length > 0) {
+                    transaction.setEndorsingPeers(endorsers);
+                } else {
+                    transaction.setEndorsingOrganizations('ICBCMSP', 'BrandAMSP', 'BrandBMSP');
+                }
+            } else {
+                transaction.setEndorsingOrganizations('ICBCMSP', 'BrandAMSP', 'BrandBMSP');
+            }
+        } catch (endorserError) {
+            logger.warn('设置背书节点失败，回退到组织背书策略', {
+                error: endorserError.message
+            });
+            try {
+                transaction.setEndorsingOrganizations('ICBCMSP', 'BrandAMSP', 'BrandBMSP');
+            } catch (fallbackError) {
+                logger.warn('设置背书组织失败，将依赖服务发现', {
+                    error: fallbackError.message
+                });
+            }
+        }
+
+    logger.logTransaction(txIdStr, functionName, args, 'started');
+
+    // 调用智能合约方法
+    const resultBuffer = await transaction.submit(...args);
+
+    const executionTime = Date.now() - startTime;
+    const parsedResult = parseChaincodeResult(resultBuffer);
+    logger.logTransaction(txIdStr, functionName, parsedResult, 'success', executionTime);
+
+    return parsedResult;
     } catch (error) {
         const executionTime = Date.now() - startTime;
         logger.logErrorDetails(`调用智能合约方法 ${functionName}`, error, {
@@ -148,36 +260,57 @@ exports.batchInvoke = async (transactions) => {
         logger.info(`开始批量调用智能合约方法，共 ${transactions.length} 笔交易`);
         
         // 创建事务提交器
-        const txCommitter = network.getChannel().newCommitter();
         const results = [];
 
         for (const tx of transactions) {
             const txStartTime = Date.now();
             try {
-                const txId = gateway.getClient().newTransactionID();
-                const txIdStr = txId.getTransactionID();
-                
-                logger.logTransaction(txIdStr, tx.functionName, tx.args, 'started');
-                
-                const request = {
-                    chaincodeId: 'collectible-chaincode',
-                    fcn: tx.functionName,
-                    args: tx.args,
-                    txId
-                };
+                const transaction = contract.createTransaction(tx.functionName);
+                const txIdStr = transaction.getTransactionId();
 
-                // 提交事务
-                const proposalResponse = await network.getChannel().sendTransactionProposal(request);
-                const commitResult = await txCommitter.commit(proposalResponse);
-                
+                try {
+                    const channel = network ? network.getChannel() : null;
+                    if (channel) {
+                        const endorsers = [
+                            ...(channel.getEndorsers('ICBCMSP') || []),
+                            ...(channel.getEndorsers('BrandAMSP') || []),
+                            ...(channel.getEndorsers('BrandBMSP') || [])
+                        ].filter(Boolean);
+
+                        if (endorsers.length > 0) {
+                            transaction.setEndorsingPeers(endorsers);
+                        } else {
+                            transaction.setEndorsingOrganizations('ICBCMSP', 'BrandAMSP', 'BrandBMSP');
+                        }
+                    } else {
+                        transaction.setEndorsingOrganizations('ICBCMSP', 'BrandAMSP', 'BrandBMSP');
+                    }
+                } catch (endorserError) {
+                    logger.warn('批量调用设置背书节点失败，回退到组织背书策略', {
+                        error: endorserError.message
+                    });
+                    try {
+                        transaction.setEndorsingOrganizations('ICBCMSP', 'BrandAMSP', 'BrandBMSP');
+                    } catch (fallbackError) {
+                        logger.warn('批量调用设置背书组织失败，将依赖服务发现', {
+                            error: fallbackError.message
+                        });
+                    }
+                }
+
+                logger.logTransaction(txIdStr, tx.functionName, tx.args, 'started');
+
+            const resultBuffer = await transaction.submit(...(tx.args || []));
+                const parsedResult = parseChaincodeResult(resultBuffer);
                 const txExecutionTime = Date.now() - txStartTime;
-                const status = commitResult.status === 'VALID' ? 'success' : 'failed';
-                
-                logger.logTransaction(txIdStr, tx.functionName, tx.args, status, txExecutionTime);
-                
+                const status = 'success';
+
+                logger.logTransaction(txIdStr, tx.functionName, parsedResult, status, txExecutionTime);
+
                 results.push({
                     txId: txIdStr,
-                    status: commitResult.status
+                    status: 'VALID',
+                    result: parsedResult
                 });
             } catch (error) {
                 const txExecutionTime = Date.now() - txStartTime;

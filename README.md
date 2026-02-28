@@ -1,244 +1,581 @@
-# 「工银溯藏」—— 基于区块链的藏品数字身份溯源系统
+<div align="center">
 
-## 项目简介
+# 🏛️ 工银溯藏 — 基于区块链的藏品数字身份溯源系统
 
-「工银溯藏」是一款基于区块链技术的藏品数字身份溯源系统，旨在为藏品提供全生命周期的身份认证、流转记录和真伪验证服务。该系统结合工商银行的金融服务能力，为藏品交易提供安全、透明、不可篡改的数字化解决方案。
+**ICBC Collectible Traceability System**
 
-## 核心功能
+[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![React](https://img.shields.io/badge/React-18.3-61DAFB?logo=react&logoColor=white)](https://reactjs.org/)
+[![Hyperledger Fabric](https://img.shields.io/badge/Hyperledger_Fabric-2.2-2F3134?logo=hyperledger&logoColor=white)](https://www.hyperledger.org/use/fabric)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### 1. 藏品数字身份创建
-- 为每件藏品创建唯一的区块链身份标识
-- 记录藏品的基本信息、特征、图片等详细数据
-- 生成防伪码和二维码，方便查询验证
+> 结合 Hyperledger Fabric 联盟链与工商银行金融服务能力，为藏品提供全生命周期的数字身份认证、所有权流转与真伪验证解决方案。
 
-### 2. 藏品流转管理
-- 记录藏品所有权的每一次转移
-- 支持藏品的认领、转让、继承等多种流转方式
-- 结合工商银行支付系统，支持安全交易
+[快速开始](#-快速开始) · [系统架构](#-系统架构) · [功能演示](#-核心功能) · [API 文档](docs/API-DOCS.md) · [项目结构](docs/PROJECT-STRUCTURE.md)
 
-### 3. 藏品真伪验证
-- 通过区块链上的不可篡改记录验证藏品真伪
-- 支持多种验证方式：扫码验证、输入防伪码验证
-- 展示藏品的完整流转历史，增强可信度
+</div>
 
-### 4. 品牌管理
-- 管理参与藏品认证的品牌商信息
-- 控制品牌商的藏品发布权限
-- 监控品牌商的藏品流转情况
+---
 
-### 5. 用户管理
-- 支持普通用户、品牌管理员、工行管理员、超级管理员等多种角色
-- 集成工商银行一键登录功能
-- 提供完整的用户认证和授权机制
+## 📖 项目简介
 
-## 技术栈
+「工银溯藏」是一款面向藏品行业的 **区块链溯源系统**。通过将藏品信息上链，利用区块链不可篡改的特性，实现藏品从创建、认领、转让到验证的全流程可信追溯。系统集成工商银行一键登录与支付能力，为品牌方和收藏者提供安全、透明的数字化藏品管理平台。
 
-### 后端技术
-- **Node.js**: 基于JavaScript的服务器端运行环境
-- **Express.js**: 轻量级Web应用框架
-- **MySQL**: 关系型数据库，存储业务数据
-- **mysql2/promise**: MySQL客户端，提供异步数据库操作
-- **Hyperledger Fabric**: 企业级区块链平台
-- **JWT**: JSON Web Token，用于用户认证
+### 解决的核心问题
 
-### 前端技术
-- 前端框架（待集成）：React.js / Vue.js
-- 状态管理：Redux / Vuex
-- UI组件库：Ant Design / Element UI
-- API请求：Axios
+| 痛点 | 解决方案 |
+|------|----------|
+| 藏品真伪难辨 | 区块链上链存证 + SHA-256 数字指纹 |
+| 流转记录不透明 | 链上完整流转历史，公开可查 |
+| 身份认证薄弱 | JWT + 工行一键登录双重认证 |
+| 品牌管理混乱 | 多组织联盟链 + RBAC 权限控制 |
 
-### 部署与运维
-- Docker：容器化部署
-- Docker Compose：多容器应用编排
-- Nginx：反向代理服务器
-- GitHub Actions：持续集成/持续部署
+---
 
-## 项目结构
+## ✨ 核心功能
+
+### 🎨 藏品数字身份
+- 为每件藏品创建 **唯一区块链身份标识**
+- 自动生成防伪二维码（QR Code），支持扫码验证
+- 基于 SHA-256 计算藏品 **数字 DNA（哈希指纹）**
+
+### 🔄 藏品流转管理
+- 支持 **认领（CLAIM）**、**转让（TRANSFER）** 等多种流转方式
+- 每次流转自动记录至区块链，形成完整溯源链
+- 藏品申请与审批工作流
+
+### 🔍 真伪验证
+- 通过防伪码 / 二维码一键验证藏品真伪
+- 展示完整的链上流转历史
+- 对比链上哈希与藏品数据，确保数据未被篡改
+
+### 👥 多角色用户体系
+| 角色 | 权限说明 |
+|------|----------|
+| `USER` | 普通用户 — 浏览、认领、转让藏品 |
+| `BRAND_ADMIN` | 品牌管理员 — 创建藏品、管理品牌信息 |
+| `ICBC_ADMIN` | 工行管理员 — 审批藏品、管理用户 |
+| `SUPER_ADMIN` | 超级管理员 — 全系统管理权限 |
+
+### 🏦 工商银行集成
+- 工行一键登录（ICBC OAuth）
+- 支付接口集成（工行/微信/支付宝）
+- 工行用户账户绑定
+
+---
+
+## 🏗️ 系统架构
 
 ```
-├── api/              # 后端API服务
-│   ├── controllers/  # 控制器层，处理业务逻辑
-│   ├── middleware/   # 中间件，处理认证、授权等
-│   ├── models/       # 数据模型，定义数据结构
-│   ├── routes/       # 路由定义
-│   ├── services/     # 服务层，封装外部API调用
-│   ├── package.json  # API服务依赖配置
-│   └── server.js     # API服务入口文件
-├── blockchain/       # 区块链相关代码和配置
-│   ├── chaincode/    # 智能合约代码
-│   ├── config/       # 区块链配置
-│   ├── network/      # 区块链网络配置
-│   ├── index.js      # 区块链模块入口文件
-│   └── package.json  # 区块链模块依赖配置
-├── config/           # 项目配置文件
-│   └── config.js     # 项目主配置文件
-├── docs/             # 项目文档
-│   ├── API-DOCS.md        # API接口文档
-│   └── PROJECT-STRUCTURE.md # 项目结构文档
-├── frontend/         # 前端应用（待创建）
-├── .gitignore        # Git忽略规则
-├── README.md         # 项目说明文档（当前文件）
-└── package.json      # 项目依赖配置
+┌─────────────────────────────────────────────────────────────┐
+│                      前端 (React 18 + Vite)                  │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────────┐  │
+│  │  用户端   │  │  管理端   │  │  认证页   │  │  公共组件   │  │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────────────┘  │
+│       └──────────────┼────────────┘                          │
+│                      │  Axios / React Query                  │
+├──────────────────────┼──────────────────────────────────────┤
+│                      ▼                                       │
+│              API 网关 (Express.js)                            │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────────┐  │
+│  │  Routes   │  │Controllers│ │Middleware │  │  Services   │  │
+│  │  路由层   │→ │  控制层   │ │ JWT/RBAC  │  │ ICBC API   │  │
+│  └──────────┘  └────┬─────┘  └──────────┘  └────────────┘  │
+│                      │                                       │
+├──────────────────────┼──────────────────────────────────────┤
+│         ┌────────────┴────────────┐                          │
+│         ▼                         ▼                          │
+│  ┌─────────────┐          ┌─────────────────┐               │
+│  │   MySQL     │          │ Hyperledger      │               │
+│  │  业务数据    │          │ Fabric 2.2       │               │
+│  │  用户/品牌   │          │ 链上存证/溯源     │               │
+│  └─────────────┘          │                   │               │
+│                           │ ┌───────────────┐ │               │
+│                           │ │  智能合约      │ │               │
+│                           │ │ (Chaincode)   │ │               │
+│                           │ └───────────────┘ │               │
+│                           └─────────────────┘               │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## 快速开始
+### 区块链网络拓扑
+
+系统采用 **Hyperledger Fabric 2.2** 联盟链架构，包含以下组织节点：
+
+| 组织 | MSP ID | 角色 | 节点 |
+|------|--------|------|------|
+| 排序组织 | `OrdererMSP` | 交易排序 | `orderer.icbc.com` |
+| 工行组织 | `ICBCMSP` | 核心管理 | `peer0.icbc.com`, `peer1.icbc.com` |
+| 品牌 A | `BrandAMSP` | 品牌方 | `peer0.branda.com` |
+| 品牌 B | `BrandBMSP` | 品牌方 | `peer0.brandb.com` |
+
+- **通道**: `collectible-channel`
+- **智能合约**: `collectible-chaincode`（JavaScript）
+- **状态数据库**: CouchDB
+- **TLS**: 全链路 TLS 加密通信
+
+---
+
+## 🛠️ 技术栈
+
+### 后端
+| 技术 | 版本 | 用途 |
+|------|------|------|
+| Node.js | 18+ | 服务端运行环境 |
+| Express.js | 4.x / 5.x | Web 框架 |
+| MySQL | 8.0 | 业务数据持久化 |
+| mysql2 | 3.x | 异步数据库驱动 |
+| Hyperledger Fabric | 2.2 | 联盟链平台 |
+| fabric-network | 2.2 | Fabric SDK |
+| fabric-contract-api | 2.2 | 智能合约开发 |
+| JWT (jsonwebtoken) | 8.x | 用户身份认证 |
+| bcryptjs | 3.x | 密码哈希加密 |
+| QRCode | 1.x | 防伪二维码生成 |
+| Helmet | 4.x | HTTP 安全头 |
+| Morgan | 1.x | HTTP 请求日志 |
+
+### 前端
+| 技术 | 版本 | 用途 |
+|------|------|------|
+| React | 18.3 | UI 框架 |
+| Vite | 5.4 | 构建工具 |
+| Ant Design | 5.19 | UI 组件库 |
+| React Router | 6.x | 客户端路由 |
+| TanStack React Query | 5.x | 服务端状态管理 |
+| Axios | 1.7 | HTTP 请求 |
+| Day.js | 1.x | 日期处理 |
+
+### DevOps
+| 技术 | 用途 |
+|------|------|
+| Docker & Docker Compose | 区块链网络容器编排 |
+| CouchDB | Fabric 状态数据库 |
+| ESLint | 代码质量检查 |
+| Nodemon | 开发热重载 |
+| Jest + Supertest | 后端单元/集成测试 |
+
+---
+
+## 📁 项目结构
+
+```
+icbc-collectible-traceability/
+│
+├── 📂 api/                          # 后端 API 服务
+│   ├── controllers/                 #   控制器 — 业务逻辑处理
+│   │   └── collectible.js           #     藏品相关业务逻辑
+│   ├── middleware/                   #   中间件
+│   │   └── auth.js                  #     JWT 认证 & RBAC 权限校验
+│   ├── models/                      #   数据模型 (MySQL ORM)
+│   │   ├── brand.js                 #     品牌模型
+│   │   ├── collectible.js           #     藏品模型 & 流转历史
+│   │   ├── collectibleApplication.js#     藏品申请模型
+│   │   └── user.js                  #     用户模型
+│   ├── routes/                      #   路由定义
+│   │   ├── auth.js                  #     认证路由 (注册/登录/工行登录)
+│   │   ├── brand.js                 #     品牌管理路由
+│   │   ├── collectible.js           #     藏品操作路由
+│   │   └── user.js                  #     用户管理路由
+│   ├── services/                    #   外部服务集成
+│   │   ├── icbcLoginSession.js      #     工行登录会话管理
+│   │   └── icbcService.js           #     工行 API 服务封装
+│   ├── utils/                       #   工具模块
+│   │   └── db.js                    #     MySQL 连接池管理
+│   ├── public/qr-codes/             #   生成的二维码图片
+│   ├── server.js                    #   API 服务入口
+│   └── package.json
+│
+├── 📂 blockchain/                   # 区块链模块
+│   ├── chaincode/                   #   智能合约
+│   │   └── collectible-chaincode.js #     藏品溯源合约 (Fabric Contract API)
+│   ├── config/                      #   Fabric 应用配置
+│   ├── network/                     #   区块链网络定义
+│   │   ├── configtx.yaml            #     通道 & 组织策略配置
+│   │   ├── crypto-config.yaml       #     证书 & 密钥生成配置
+│   │   ├── docker-compose.yaml      #     网络容器编排 (4 Peer + 1 Orderer + CouchDB)
+│   │   ├── connection-profile.json  #     SDK 连接配置文件
+│   │   ├── channel-artifacts/       #     通道创世块 & 锚节点交易
+│   │   └── crypto-config/           #     组织证书与密钥材料
+│   ├── scripts/                     #   运维脚本
+│   │   ├── start-network.js         #     启动区块链网络
+│   │   ├── stop-network.js          #     停止区块链网络
+│   │   └── deploy-chaincode.js      #     部署智能合约
+│   ├── utils/                       #   工具模块
+│   │   ├── crypto-utils.js          #     加密工具
+│   │   └── log-utils.js             #     日志工具
+│   ├── wallet/                      #   Fabric 钱包 (用户身份证书)
+│   ├── index.js                     #   区块链模块入口
+│   └── package.json
+│
+├── 📂 frontend/app/                 # 前端应用 (React + Vite)
+│   ├── src/
+│   │   ├── pages/
+│   │   │   ├── auth/                #   认证页面
+│   │   │   │   ├── LoginPage.jsx    #     登录页
+│   │   │   │   └── IcbcAuthorize.jsx#     工行授权页
+│   │   │   ├── client/              #   用户端页面
+│   │   │   │   ├── Dashboard.jsx    #     用户仪表盘
+│   │   │   │   ├── MyCollectibles.jsx#    我的藏品
+│   │   │   │   ├── SearchCollectibles.jsx# 搜索藏品
+│   │   │   │   ├── CollectibleHistory.jsx# 藏品溯源历史
+│   │   │   │   ├── CollectibleTransfer.jsx# 藏品转让
+│   │   │   │   ├── ApplyCollectible.jsx#  申请藏品
+│   │   │   │   └── CollectibleApplication.jsx# 申请记录
+│   │   │   └── admin/               #   管理端页面
+│   │   │       ├── Dashboard.jsx    #     管理仪表盘
+│   │   │       ├── CreateCollectible.jsx# 创建藏品
+│   │   │       ├── SearchCollectibles.jsx# 藏品检索
+│   │   │       ├── UserManagement.jsx#   用户管理
+│   │   │       ├── Approvals.jsx    #     审批管理
+│   │   │       ├── ApplicationApprovals.jsx# 申请审批
+│   │   │       └── TransferApprovals.jsx#  转让审批
+│   │   ├── components/              #   公共组件
+│   │   │   ├── common/ProtectedRoute.jsx# 路由守卫
+│   │   │   └── admin/MetricCard.jsx #   数据指标卡片
+│   │   ├── layouts/                 #   页面布局
+│   │   │   ├── AdminLayout.jsx      #     管理端布局
+│   │   │   ├── ClientLayout.jsx     #     用户端布局
+│   │   │   └── AuthLayout.jsx       #     认证页布局
+│   │   ├── services/                #   API 服务层
+│   │   │   ├── apiClient.js         #     Axios 实例 & 拦截器
+│   │   │   ├── authService.js       #     认证服务
+│   │   │   ├── brandService.js      #     品牌服务
+│   │   │   ├── collectibleService.js#     藏品服务
+│   │   │   └── userService.js       #     用户服务
+│   │   ├── context/AuthContext.jsx   #   认证上下文 (React Context)
+│   │   ├── hooks/useAuth.js         #   认证 Hook
+│   │   ├── router/index.jsx         #   路由配置
+│   │   ├── App.jsx                  #   应用入口组件
+│   │   └── main.jsx                 #   Vite 入口
+│   ├── vite.config.js               #   Vite 构建配置
+│   └── package.json
+│
+├── 📂 config/                       # 全局配置
+│   ├── config.js                    #   项目主配置 (DB/JWT/Blockchain/ICBC/支付)
+│   ├── configtx.yaml                #   Fabric 配置交易模板
+│   ├── core.yaml                    #   Fabric Peer 核心配置
+│   └── orderer.yaml                 #   Fabric Orderer 配置
+│
+├── 📂 bin/                          # Hyperledger Fabric 二进制工具
+│   ├── configtxgen                  #   通道配置生成工具
+│   ├── cryptogen                    #   证书生成工具
+│   ├── peer                         #   Peer 节点 CLI
+│   └── orderer                      #   Orderer 节点
+│
+├── 📂 docs/                         # 项目文档
+│   ├── API-DOCS.md                  #   完整 API 接口文档
+│   └── PROJECT-STRUCTURE.md         #   项目结构说明
+│
+├── package.json                     # 根项目配置
+└── README.md                        # 项目说明文档（本文件）
+```
+
+---
+
+## 🚀 快速开始
 
 ### 环境要求
-- Node.js >= 14.0.0
-- MySQL >= 5.7
-- Docker >= 20.0.0 (用于区块链网络)
-- npm >= 6.0.0 或 yarn >= 1.22.0
 
-### 安装与配置
+| 依赖 | 最低版本 | 说明 |
+|------|----------|------|
+| Node.js | >= 18.0.0 | JavaScript 运行环境 |
+| npm | >= 8.0.0 | 包管理器 |
+| MySQL | >= 5.7 | 关系型数据库 |
+| Docker | >= 20.0.0 | 容器运行时 |
+| Docker Compose | >= 1.29 | 容器编排 |
 
-1. **克隆项目代码**
+### 1️⃣ 克隆项目
+
 ```bash
-git clone https://github.com/your-organization/icbc-collectible.git
-cd icbc-collectible
+git clone https://github.com/your-username/icbc-collectible-traceability.git
+cd icbc-collectible-traceability
 ```
 
-2. **安装依赖**
+### 2️⃣ 安装依赖
+
 ```bash
-# 安装根目录依赖
+# 安装根项目依赖
 npm install
 
-# 安装API服务依赖
-cd api
-npm install
+# 安装 API 服务依赖
+cd api && npm install && cd ..
 
 # 安装区块链模块依赖
-cd ../blockchain
-npm install
+cd blockchain && npm install && cd ..
+
+# 安装前端依赖
+cd frontend/app && npm install && cd ../..
 ```
 
-3. **配置环境变量**
-创建`.env`文件，根据实际情况配置环境变量：
+### 3️⃣ 配置环境变量
+
+在项目根目录创建 `.env` 文件：
+
 ```env
-# 基本配置
+# ===== 基本配置 =====
 NODE_ENV=development
 PORT=3000
 
-# MySQL配置
+# ===== MySQL 配置 =====
 MYSQL_HOST=localhost
 MYSQL_USER=root
-MYSQL_PASSWORD=password
-MYSQL_DATABASE=collectible
+MYSQL_PASSWORD=your_password
+MYSQL_DATABASE=icbc-collectible
 MYSQL_PORT=3306
 
-# JWT配置
-JWT_SECRET=your-secret-key-here
+# ===== JWT 配置 (首次启动会自动生成) =====
+JWT_SECRET=your-jwt-secret
+JWT_REFRESH_SECRET=your-jwt-refresh-secret
 JWT_EXPIRES_IN=24h
+JWT_REFRESH_EXPIRES_IN=7d
 
-# 区块链配置
+# ===== 区块链配置 =====
 BLOCKCHAIN_CONFIG_PATH=../blockchain/network/network-config.yaml
-BLOCKCHAIN_CHANNEL=mychannel
+BLOCKCHAIN_CHANNEL=collectible-channel
 BLOCKCHAIN_CHAINCODE=collectible-chaincode
+BLOCKCHAIN_MSP_ID=Org1MSP
 
-# 工行API配置
+# ===== 工行 API 配置 =====
 ICBC_API_BASE_URL=https://api.icbc.com.cn
 ICBC_APP_ID=your-icbc-app-id
 ICBC_API_KEY=your-icbc-api-key
+ICBC_MERCHANT_ID=your-icbc-merchant-id
 ```
 
-4. **启动MySQL服务**
+> 💡 **提示**: JWT 密钥在首次启动 API 服务时会自动生成并写入 `.env` 文件，无需手动配置。
+
+### 4️⃣ 启动 MySQL 数据库
+
 ```bash
-# 本地MySQL服务启动示例
-sudo systemctl start mysql
-# 或使用Docker启动MySQL
-docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABASE=collectible -p 3306:3306 mysql:5.7
+# 方式一：使用 Docker 快速启动
+docker run -d \
+  --name icbc-mysql \
+  -e MYSQL_ROOT_PASSWORD=your_password \
+  -e MYSQL_DATABASE=icbc-collectible \
+  -p 3306:3306 \
+  mysql:8.0
+
+# 方式二：使用本地 MySQL 服务
+# 确保 MySQL 服务已启动，并创建数据库 icbc-collectible
 ```
 
-5. **启动区块链网络**
+### 5️⃣ 启动区块链网络
+
 ```bash
-# 进入区块链网络目录
-cd blockchain/network
-# 启动网络（具体命令根据网络配置而定）
-# 示例（使用Hyperledger Fabric的byfn脚本）
-./network.sh up createChannel -c mychannel -ca
+cd blockchain
+
+# 启动 Fabric 网络 (Docker Compose)
+npm run start-network
+
+# 部署智能合约
+npm run deploy
 ```
 
-6. **部署智能合约**
-```bash
-# 在区块链网络目录下
-./network.sh deployCC -c mychannel -ccn collectible-chaincode -ccp ../chaincode -ccl javascript
-```
+### 6️⃣ 启动后端 API 服务
 
-7. **启动API服务**
 ```bash
-# 返回API服务目录
-cd ../../api
-# 启动服务
+cd api
+
+# 生产模式
 npm start
-# 或使用开发模式启动（支持热重载）
+
+# 开发模式 (支持热重载)
 npm run dev
 ```
 
-## 使用指南
+API 服务默认运行在 `http://localhost:3000`
 
-### API接口调用
+### 7️⃣ 启动前端应用
 
-系统提供了丰富的API接口，详细的接口文档请参考`docs/API-DOCS.md`文件。主要包括以下几类接口：
+```bash
+cd frontend/app
 
-1. **认证接口**：用户注册、登录、信息查询等
-2. **藏品接口**：创建藏品、查询藏品、转移所有权等
-3. **品牌接口**：管理参与的品牌商信息
+# 开发模式
+npm run dev
 
-### 藏品创建与流转流程
+# 构建生产版本
+npm run build
+```
 
-1. **创建藏品**：品牌管理员或工行管理员登录系统，创建新藏品信息，系统自动在区块链上生成唯一标识
-2. **分配藏品**：将创建的藏品分配给初始所有者
-3. **认领藏品**：用户通过工行认证后，认领属于自己的藏品
-4. **转移藏品**：藏品所有者可以将藏品转让给其他用户
-5. **验证藏品**：任何人都可以通过系统验证藏品的真伪和流转历史
+前端应用默认运行在 `http://localhost:5173`
 
-## 安全措施
+---
 
-1. **多重身份认证**：支持密码登录和工行一键登录，采用JWT进行身份验证
-2. **权限控制**：基于角色的访问控制（RBAC），严格控制各功能模块的访问权限
-3. **数据加密**：敏感数据存储加密，传输过程采用HTTPS加密
-4. **区块链防伪**：利用区块链的不可篡改特性，确保藏品信息和流转记录的真实性
-5. **异常监控**：实时监控系统运行状态和异常行为
+## 📡 API 接口概览
 
-## 开发与贡献
+完整 API 文档请参阅 [docs/API-DOCS.md](docs/API-DOCS.md)。
 
-1. **开发流程**
-   - Fork项目仓库
-   - 创建功能分支（`git checkout -b feature/your-feature`）
-   - 提交代码（`git commit -am 'Add some feature'`）
-   - 推送到分支（`git push origin feature/your-feature`）
-   - 创建Pull Request
+### 认证接口
 
-2. **代码规范**
-   - 遵循JavaScript/Node.js代码规范
-   - 提交前运行`npm run lint`检查代码质量
-   - 确保测试用例通过
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| `POST` | `/api/auth/register` | 用户注册 |
+| `POST` | `/api/auth/login` | 用户登录 |
+| `POST` | `/api/auth/login/icbc` | 工行一键登录 |
+| `GET` | `/api/auth/me` | 获取当前用户信息 |
 
-3. **文档更新**
-   - 代码更新时同步更新相关文档
-   - 新增功能时更新API文档和使用说明
+### 藏品接口
 
-## 故障排查
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| `POST` | `/api/collectibles` | 创建藏品（管理员） |
+| `GET` | `/api/collectibles` | 查询藏品列表 |
+| `GET` | `/api/collectibles/:id` | 查询藏品详情 |
+| `POST` | `/api/collectibles/:id/claim` | 认领藏品 |
+| `POST` | `/api/collectibles/:id/transfer` | 转让藏品 |
+| `GET` | `/api/collectibles/:id/history` | 查询流转历史 |
+| `GET` | `/api/collectibles/:id/verify` | 验证藏品真伪 |
 
-1. **数据库连接失败**
-   - 检查MySQL服务是否正常运行
-   - 确认MySQL连接配置（主机、端口、用户名、密码、数据库名）正确
+### 品牌接口
 
-2. **区块链网络问题**
-   - 检查Docker容器是否正常运行（`docker ps -a`）
-   - 查看区块链日志（`docker logs container_name`）
-   - 确认网络配置文件正确
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| `GET` | `/api/brands` | 获取品牌列表 |
+| `POST` | `/api/brands` | 创建品牌 |
 
-3. **API请求错误**
-   - 检查请求参数是否符合要求
-   - 确认认证令牌是否有效
-   - 查看API服务日志，定位具体错误信息
+### 用户接口
 
-## 版权信息
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| `GET` | `/api/users` | 获取用户列表（管理员） |
+| `PUT` | `/api/users/:id` | 更新用户信息 |
 
-© 2023 工商银行. All Rights Reserved.
+---
 
-## 联系方式
+## 🔐 智能合约
 
-如有任何问题或建议，请联系项目负责人：
-- 邮箱：project@icbc.com
-- 电话：400-123-4567
+智能合约 `CollectibleTraceabilityContract` 基于 `fabric-contract-api` 开发，部署在 Fabric 联盟链上，提供以下核心功能：
+
+| 方法 | 说明 |
+|------|------|
+| `initLedger()` | 初始化账本 |
+| `createCollectible()` | 创建藏品数字身份并上链 |
+| `claimCollectible()` | 认领藏品，转移所有权 |
+| `transferCollectible()` | 转让藏品所有权 |
+| `queryCollectible()` | 查询链上藏品信息 |
+| `getCollectibleHistory()` | 获取藏品流转历史 |
+| `verifyCollectible()` | 通过哈希验证藏品真伪 |
+
+每次藏品操作都会自动计算 **SHA-256 哈希值** 作为数字指纹，确保数据完整性。
+
+---
+
+## 🔒 安全措施
+
+1. **双重身份认证** — 密码登录 + 工行 OAuth 一键登录
+2. **JWT Token** — Access Token (24h) + Refresh Token (7d) 双令牌机制
+3. **RBAC 权限控制** — 基于角色的细粒度访问控制
+4. **密码安全** — bcryptjs 加盐哈希存储
+5. **HTTP 安全** — Helmet 中间件设置安全响应头
+6. **API 限流** — 滑动窗口限流，防止暴力攻击
+7. **区块链防篡改** — 链上数据不可篡改，确保藏品信息真实可信
+8. **TLS 加密** — 区块链节点间全链路 TLS 加密通信
+
+---
+
+## 🐛 故障排查
+
+<details>
+<summary><b>数据库连接失败</b></summary>
+
+- 检查 MySQL 服务是否正常运行
+- 确认 `.env` 中的数据库配置正确
+- 验证数据库 `icbc-collectible` 是否已创建
+</details>
+
+<details>
+<summary><b>区块链网络启动失败</b></summary>
+
+- 检查 Docker 是否正常运行：`docker ps -a`
+- 查看容器日志：`docker logs orderer.icbc.com`
+- 确认证书文件存在于 `blockchain/network/crypto-config/`
+- 检查端口占用：7050 (Orderer), 7051 (Peer), 5984 (CouchDB)
+</details>
+
+<details>
+<summary><b>前端无法连接后端 API</b></summary>
+
+- 确认 API 服务在 `http://localhost:3000` 正常运行
+- 检查 Vite 代理配置 (`vite.config.js` → `/api` 代理)
+- 检查 CORS 配置是否允许前端域名
+</details>
+
+<details>
+<summary><b>JWT 认证错误</b></summary>
+
+- 首次启动会自动生成 JWT 密钥，检查 `.env` 文件
+- 确认 Token 未过期（默认 24 小时）
+- 检查请求头格式：`Authorization: Bearer <token>`
+</details>
+
+---
+
+## 🤝 开发与贡献
+
+### 开发流程
+
+```bash
+# 1. Fork 并克隆项目
+git clone https://github.com/your-username/icbc-collectible-traceability.git
+
+# 2. 创建功能分支
+git checkout -b feature/your-feature
+
+# 3. 开发并提交
+git commit -am "feat: add some feature"
+
+# 4. 推送并创建 PR
+git push origin feature/your-feature
+```
+
+### 代码规范
+
+- 遵循 ESLint 配置的代码规范
+- 提交信息遵循 [Conventional Commits](https://www.conventionalcommits.org/) 规范
+- 新功能需要编写对应的测试用例
+
+### 项目脚本
+
+```bash
+# 根目录
+npm run dev:api          # 启动 API 开发服务
+npm run dev:blockchain   # 启动区块链模块
+
+# API 目录
+npm start                # 生产模式启动
+npm run dev              # 开发模式 (Nodemon)
+npm test                 # 运行测试
+
+# 区块链目录
+npm run start-network    # 启动区块链网络
+npm run stop-network     # 停止区块链网络
+npm run deploy           # 部署智能合约
+
+# 前端目录
+npm run dev              # 开发服务器
+npm run build            # 生产构建
+npm run preview          # 预览构建结果
+```
+
+---
+
+## 📄 开源协议
+
+本项目采用 [MIT License](LICENSE) 开源协议。
+
+---
+
+## 📬 联系方式
+
+如有任何问题或建议，欢迎通过以下方式联系：
+
+- 📧 邮箱：project@icbc.com
+- 🐛 Issue：[GitHub Issues](https://github.com/your-username/icbc-collectible-traceability/issues)
+
+---
+
+<div align="center">
+  <sub>Built with ❤️ by ICBC Blockchain Team</sub>
+</div>

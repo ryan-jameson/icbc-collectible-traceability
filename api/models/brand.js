@@ -107,6 +107,23 @@ class Brand {
         return rows.map(row => new Brand(row));
     }
 
+    // 静态方法：获取第一条有效品牌记录
+    static async findFirstActive() {
+        const pool = getPool();
+        const [rows] = await pool.execute(
+            'SELECT * FROM brands WHERE status = ? ORDER BY created_at ASC LIMIT 1',
+            ['ACTIVE']
+        );
+        if (rows.length > 0) {
+            return new Brand(rows[0]);
+        }
+
+        const [anyRows] = await pool.execute(
+            'SELECT * FROM brands ORDER BY created_at ASC LIMIT 1'
+        );
+        return anyRows.length > 0 ? new Brand(anyRows[0]) : null;
+    }
+
     // 静态方法：获取某用户创建的品牌
     static async findByCreatedBy(userId) {
         const pool = getPool();

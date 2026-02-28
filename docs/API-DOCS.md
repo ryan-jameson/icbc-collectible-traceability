@@ -276,7 +276,33 @@
 }
 ```
 
-### 2.5 查询藏品流转历史
+### 2.5 更新藏品状态
+
+**URL**: `/api/collectibles/:id/status`
+**方法**: `PATCH`
+**权限**: 需要工行管理员或超级管理员权限
+**请求体**: 
+```json
+{
+  "status": "ACTIVE"
+}
+```
+**说明**: `status` 支持的取值包括 `PENDING_REVIEW`、`ACTIVE`、`REJECTED`、`TRANSFER_PENDING`
+**响应**: 
+```json
+{
+  "success": true,
+  "data": {
+    "blockchain_id": "COL-1691564987123-ABCD12",
+    "name": "藏品名称",
+    "status": "ACTIVE",
+    "brand_name": "品牌名称",
+    "updated_at": "2023-07-02T12:00:00Z"
+  }
+}
+```
+
+### 2.6 查询藏品流转历史
 
 **URL**: `/api/collectibles/:id/history`
 **方法**: `GET`
@@ -306,7 +332,7 @@
 }
 ```
 
-### 2.6 验证藏品真伪
+### 2.7 验证藏品真伪
 
 **URL**: `/api/collectibles/verify`
 **方法**: `POST`
@@ -335,7 +361,7 @@
 }
 ```
 
-### 2.7 搜索藏品
+### 2.8 搜索藏品
 
 **URL**: `/api/collectibles`
 **方法**: `GET`
